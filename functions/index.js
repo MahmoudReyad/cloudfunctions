@@ -30,7 +30,7 @@ exports.addRequest = functions.https.onCall((data , context) => {
     }else  {
         return admin.firestore().collection('requests').add(
             {
-                'text' : data.text ,
+                text : data.text ,
                 upvote : 0,
             }
         )

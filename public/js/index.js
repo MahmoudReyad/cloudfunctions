@@ -1,5 +1,6 @@
 const requestModal = document.querySelector('.new-request');
 const requestLink = document.querySelector('.add-request');
+const requestForm = document.querySelector('.new-request form');
 
 // open request modal
 requestLink.addEventListener('click', () => {
@@ -13,13 +14,17 @@ requestModal.addEventListener('click', (e) => {
     }
 });
 
-// say hello function call
-const button = document.querySelector('.call');
-button.addEventListener('click', () => {
-// get function reference
-    const sayHello = firebase.functions().httpsCallable('sayHello');
-    // call the function and pass data
-    sayHello({ name: 'Shaun' }).then(result => {
-        console.log(result.data);
-    });
+//Add Query Request
+requestForm.addEventListener('submit' , e =>{
+   e.preventDefault();
+   const addRequest = firebase.functions().httpsCallable('addRequest');
+   addRequest({
+       text: requestForm.request.value
+   }).then(() => {
+       requestForm.reset();
+       requestModal.classList.remove('open');
+       requestForm.querySelector('.error').textContent = '';
+   }).catch(error => {
+       requestForm.querySelector('.error').textContent = error.message;
+   });
 });
