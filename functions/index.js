@@ -5,7 +5,7 @@ admin.initializeApp();
 exports.newUserSignup = functions.auth.user().onCreate(user => {
    return admin.firestore().collection('users').doc(user.uid).set({
        email : user.email ,
-       upVote : [] ,
+       upvotedOn : [] ,
    });
 });
 
@@ -35,4 +35,33 @@ exports.addRequest = functions.https.onCall((data , context) => {
             }
         )
     }
+});
+//Upvoting Function
+exports.upvote = functions.https.onCall((data , context) => {
+    if(!context.auth) {
+        throw  new functions.https.HttpsError(
+            'unauthenticated',
+            'unauthenticated user'
+        );
+    }
+//    Get Ref For User And Requested Doc
+    const user = admin.firestore().collection('users').doc(context.auth.uid);
+    const request = admin.firestore().collection('requests').doc(data.id);
+//    Check User Hasn't Already Upvoted The Request
+    return user.get().then(doc => {
+        if(doc.data().upvotedOn.includes(data.id)){
+            throw  new functions.https.HttpsError(
+                'failed-precondition' ,
+                'You Can Only Upvote Once'
+            );
+        }
+        //    Update User Upvoted Array
+        return user.update({
+            upvotedOn:[...doc.data().upvotedOn , data.id] ,
+        }).then(() => {
+            return request.update({
+                upvote: admin.firestore.FieldValue.increment(1)
+            })
+        });
+    });
 });
